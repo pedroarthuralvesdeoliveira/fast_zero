@@ -14,6 +14,10 @@ class UserPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OneUser(BaseModel):
+    user: UserPublic
+
+
 class UserList(BaseModel):
     users: list[UserPublic]
 

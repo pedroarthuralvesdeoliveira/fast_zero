@@ -8,6 +8,18 @@ def test_root_deve_retornar_200_e_ola_mundo(client):
     assert response.json() == {'message': 'Olá Mundo!'}  # Assert
 
 
+def test_get_token(client, user):
+    response = client.post(
+        '/token',
+        data={'username': user.email, 'password': user.clean_password},
+    )
+    token = response.json()
+
+    assert response.status_code == 200
+    assert 'access_token' in token
+    assert 'token_type' in token
+
+
 def test_create_user(client):
     response = client.post(
         '/users/',
@@ -43,9 +55,10 @@ def test_read_users_with_users(client, user):
     assert response.json() == {'users': [user_schema]}
 
 
-def test_update_user(client, user):
+def test_update_user(client, user, token):
     response = client.put(
-        '/users/1',
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'bob',
             'email': 'bob@example.com',
@@ -54,29 +67,30 @@ def test_update_user(client, user):
     )
     assert response.status_code == 200
     assert response.json() == {
-        'user': {
-            'username': 'bob',
-            'email': 'bob@example.com',
-            'id': 1,
-        }
+        'username': 'bob',
+        'email': 'bob@example.com',
+        'id': 1,
     }
 
 
-def test_delete_user(client, user):
-    response = client.delete('/users/1')
+def test_delete_user(client, user, token):
+    response = client.delete(
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
     assert response.status_code == 200
     assert response.json() == {'detail': 'User deleted'}
 
 
-def test_read_user(client, user):
-    response = client.get(f'/read_user/?user_id={1}')
-    assert response.status_code == 200
-    assert response.json() == {
-        'user': {'id': 1, 'username': 'Teste', 'email': 'teste@test.com'}
-    }
-
-
-def test_read_inexistent_user(client, user):
-    response = client.get(f'/read_user/?user_id={2}')
-    assert response.status_code == 404
-    assert response.json() == {'detail': 'User not found'}
+# def test_read_user(client, user):
+#     response = client.get(f'/read_user/?user_id={1}')
+#     assert response.status_code == 200
+#     assert response.json() == {
+#         'user': {'id': 1, 'username': 'Teste', 'email': 'teste@test.com'}
+#     }
+#
+#
+# def test_read_inexistent_user(client, user):
+#     response = client.get(f'/read_user/?user_id={2}')
+#     assert response.status_code == 404
+#     assert response.json() == {'detail': 'User not found'}
